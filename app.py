@@ -63,7 +63,8 @@ st.sidebar.header("📋 Dados da Viagem")
 # Destino
 destino = st.sidebar.selectbox(
     "Destino da viagem:",
-    ["Distrito Federal", "Capitais de Estado", "Demais Municípios"]
+    ["Demais Municípios", "Distrito Federal", "Capitais de Estado"],
+    index=0  # Demais Municípios como padrão
 )
 
 # Datas da viagem
@@ -75,9 +76,12 @@ data_ida = st.sidebar.date_input(
     max_value=datetime.now().date() + timedelta(days=365)
 )
 
+# Definir valor padrão para retorno (sempre >= data de ida)
+valor_padrao_retorno = max(data_ida, datetime.now().date())
+
 data_retorno = st.sidebar.date_input(
     "Data de retorno:",
-    value=datetime.now().date(),
+    value=valor_padrao_retorno,
     min_value=data_ida,
     max_value=datetime.now().date() + timedelta(days=365)
 )

@@ -263,7 +263,7 @@ data_retorno = st.sidebar.date_input(
 )
 
 # Horário de retorno (sempre mostrar)
-st.sidebar.subheader("🔙 Horário de Retorno")
+st.sidebar.subheader("🔙 Horário de Chegada no Retorno")
 col_hora_ret, col_min_ret = st.sidebar.columns(2)
 with col_hora_ret:
     hora_retorno = st.selectbox(
@@ -501,10 +501,6 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
     - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária adicional)
     """)
-
-# Valores de referência
-st.subheader("💰 Valores de Referência")
-st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
 
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")

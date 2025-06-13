@@ -81,7 +81,7 @@ st.caption("Baseado no Decreto nº 6.358/2024")
 
 # Informações sobre como usar
 st.info("""
-📋 **Como funciona (baseado em marco temporal):**
+📋 **Como funciona:**
 - **Marco temporal**: O horário de saída no primeiro dia determina o cálculo
 - **Até 6h**: Sem direito à diária
 - **6h a 8h**: 50% da diária de alimentação  

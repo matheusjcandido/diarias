@@ -1,0 +1,17 @@
+[theme]
+# Configurações de tema
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+
+[server]
+# Configurações do servidor
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+# Configurações do navegador
+gatherUsageStats = false

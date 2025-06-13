@@ -29,7 +29,25 @@ except:
 
 # Função para formatar moeda
 def format_currency(value):
-    return f"R$ {value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+    """Formata valor para moeda brasileira: R$ 1.234,56"""
+    # Converter para float se necessário
+    if isinstance(value, str):
+        value = float(value)
+    
+    # Formatação manual para garantir padrão brasileiro
+    valor_str = f"{value:.2f}"  # Formato: 1234.56
+    partes = valor_str.split('.')
+    inteira = partes[0]
+    decimal = partes[1]
+    
+    # Adicionar pontos para milhares
+    if len(inteira) > 3:
+        # Reverter string, adicionar pontos a cada 3 dígitos, reverter novamente
+        inteira_invertida = inteira[::-1]
+        inteira_com_pontos = '.'.join([inteira_invertida[i:i+3] for i in range(0, len(inteira_invertida), 3)])
+        inteira = inteira_com_pontos[::-1]
+    
+    return f"R$ {inteira},{decimal}"
 
 # Título principal
 st.title("💰 Calculadora de Diárias de Viagem")

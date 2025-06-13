@@ -113,41 +113,7 @@ st.markdown("""
         margin-bottom: 10px;
     }
     
-    /* Forçar sidebar aberta - Classes mais recentes do Streamlit */
-    .st-emotion-cache-1cypcdb,
-    .st-emotion-cache-10trblm,
-    .css-1d391kg {
-        width: 21rem !important;
-        min-width: 21rem !important;
-    }
-    
-    /* Para dispositivos móveis - manter sidebar visível */
-    @media (max-width: 768px) {
-        .st-emotion-cache-1cypcdb,
-        .st-emotion-cache-10trblm,
-        .css-1d391kg {
-            width: 18rem !important;
-            min-width: 18rem !important;
-            max-width: 18rem !important;
-            transform: translateX(0px) !important;
-            position: relative !important;
-        }
-        
-        /* Esconder botão de toggle em mobile */
-        .st-emotion-cache-14xtw13,
-        .css-14xtw13 {
-            display: none !important;
-        }
-        
-        /* Ajustar container principal */
-        .block-container,
-        .st-emotion-cache-1y4p8pa {
-            padding-left: 19rem !important;
-            max-width: calc(100% - 19rem) !important;
-        }
-    }
-    
-    /* Desktop - garantir sidebar sempre visível */
+    /* Desktop - sidebar expandida por padrão */
     @media (min-width: 769px) {
         .st-emotion-cache-1cypcdb,
         .css-1cypcdb {
@@ -155,20 +121,89 @@ st.markdown("""
             position: relative !important;
         }
     }
+    
+    /* Mobile - comportamento responsivo normal */
+    @media (max-width: 768px) {
+        /* Quando sidebar ABERTA - detecta pela presença da classe de sidebar visível */
+        .st-emotion-cache-1cypcdb:not([aria-hidden="true"]),
+        .css-1cypcdb:not([aria-hidden="true"]) {
+            width: 18rem !important;
+            min-width: 18rem !important;
+        }
+        
+        /* Container principal quando sidebar ABERTA */
+        .st-emotion-cache-1cypcdb:not([aria-hidden="true"]) ~ .block-container,
+        .css-1cypcdb:not([aria-hidden="true"]) ~ .block-container {
+            padding-left: 19rem !important;
+            max-width: calc(100% - 19rem) !important;
+        }
+        
+        /* Container principal quando sidebar FECHADA - volta ao normal */
+        .st-emotion-cache-1cypcdb[aria-hidden="true"] ~ .block-container,
+        .css-1cypcdb[aria-hidden="true"] ~ .block-container,
+        .block-container {
+            padding-left: 1rem !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        
+        /* Garantir que conteúdo se expanda quando sidebar fechada */
+        .stApp > .block-container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            max-width: 100% !important;
+        }
+        
+        /* Quando sidebar está visível, ajustar conteúdo */
+        .stApp:has(.st-emotion-cache-1cypcdb:not([style*="translateX(-100%)"]):not([style*="translateX(-18rem)"])) .block-container {
+            padding-left: 19rem !important;
+            max-width: calc(100% - 19rem) !important;
+        }
+    }
 </style>
 
 <script>
-// JavaScript para expandir sidebar automaticamente
+// JavaScript para detectar mudanças na sidebar e ajustar layout
 window.addEventListener('load', function() {
-    // Tentar expandir sidebar após carregar
-    setTimeout(function() {
-        const sidebarButtons = document.querySelectorAll('[data-testid="baseButton-header"]');
-        sidebarButtons.forEach(button => {
-            if (button.getAttribute('aria-expanded') === 'false') {
-                button.click();
+    // Função para ajustar layout baseado no estado da sidebar
+    function adjustLayout() {
+        const sidebar = document.querySelector('.st-emotion-cache-1cypcdb, .css-1cypcdb');
+        const container = document.querySelector('.block-container');
+        
+        if (sidebar && container && window.innerWidth <= 768) {
+            const sidebarStyle = window.getComputedStyle(sidebar);
+            const transform = sidebarStyle.transform;
+            
+            // Se sidebar está fechada (translateX negativo)
+            if (transform.includes('translateX(-') || sidebar.style.transform.includes('translateX(-')) {
+                container.style.paddingLeft = '1rem';
+                container.style.maxWidth = '100%';
+                container.style.width = '100%';
+            } else {
+                // Sidebar aberta
+                container.style.paddingLeft = '19rem';
+                container.style.maxWidth = 'calc(100% - 19rem)';
             }
+        }
+    }
+    
+    // Observar mudanças na sidebar
+    const observer = new MutationObserver(adjustLayout);
+    const sidebar = document.querySelector('.st-emotion-cache-1cypcdb, .css-1cypcdb');
+    
+    if (sidebar) {
+        observer.observe(sidebar, {
+            attributes: true,
+            attributeFilter: ['style', 'aria-hidden']
         });
-    }, 1000);
+    }
+    
+    // Ajustar no resize da janela
+    window.addEventListener('resize', adjustLayout);
+    
+    // Ajuste inicial
+    setTimeout(adjustLayout, 500);
+    setTimeout(adjustLayout, 1500); // Segundo ajuste após carregamento completo
 });
 </script>
 """, unsafe_allow_html=True)

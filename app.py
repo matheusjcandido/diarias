@@ -288,7 +288,7 @@ data_retorno = st.sidebar.date_input(
 )
 
 # Horário de retorno (sempre mostrar)
-st.sidebar.subheader("🔙 Horário de Retorno")
+st.sidebar.subheader("🔙 Horário de Chegada no Retorno")
 col_hora_ret, col_min_ret = st.sidebar.columns(2)
 with col_hora_ret:
     hora_retorno = st.selectbox(

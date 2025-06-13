@@ -148,7 +148,7 @@ with col2:
     hospedagem_gratuita = st.checkbox("Hospedagem gratuita fornecida")
 
 # Função para calcular a diária
-def calcular_diaria(destino, tipo_deslocamento, num_dias, alimentacao_gratuita, hospedagem_gratuita):
+def calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno, alimentacao_gratuita, hospedagem_gratuita):
     valores = VALORES_DIARIAS[destino]
     valor_alimentacao = valores["alimentacao"]
     valor_pousada = valores["pousada"]
@@ -160,53 +160,102 @@ def calcular_diaria(destino, tipo_deslocamento, num_dias, alimentacao_gratuita, 
     percentual_aplicado = 0
     observacoes = []
     
-    # Aplicar regras conforme o tipo de deslocamento
-    if tipo_deslocamento == "Até 6 horas (sem diária)":
-        diaria_alimentacao = 0
-        diaria_hospedagem = 0
-        percentual_aplicado = 0
-        observacoes.append("Deslocamento inferior a 6 horas não gera direito à diária")
+    # Verificar se é viagem com pernoite
+    tem_pernoite = data_ida != data_retorno
+    
+    if tem_pernoite:
+        # Viagem com pernoite - lógica especial
+        dias_com_pernoite = num_dias - 1  # Todos os dias exceto o último
+        dia_retorno = 1  # Apenas o último dia
         
-    elif tipo_deslocamento == "6 a 8 horas consecutivas (sem pernoite)":
-        if not alimentacao_gratuita:
-            diaria_alimentacao = valor_alimentacao * 0.5  # 50% do valor
-            percentual_aplicado = 50
-            observacoes.append("50% do valor de alimentação (6-8h sem pernoite)")
-        else:
-            observacoes.append("Alimentação gratuita fornecida - sem diária")
+        total_viagem = 0
+        
+        # Calcular diárias para dias com pernoite (ida + dias intermediários)
+        if dias_com_pernoite > 0:
+            diaria_completa_por_dia = 0
+            if not alimentacao_gratuita:
+                diaria_completa_por_dia += valor_alimentacao
+            if not hospedagem_gratuita:
+                diaria_completa_por_dia += valor_pousada
             
-    elif tipo_deslocamento == "Mais de 8 horas consecutivas (sem pernoite)":
+            total_dias_pernoite = diaria_completa_por_dia * dias_com_pernoite
+            total_viagem += total_dias_pernoite
+        
+        # Calcular diária para o dia de retorno (apenas alimentação)
+        diaria_retorno = 0
         if not alimentacao_gratuita:
-            diaria_alimentacao = valor_alimentacao  # 100% do valor
-            percentual_aplicado = 100
-            observacoes.append("100% do valor de alimentação (>8h sem pernoite)")
-        else:
-            observacoes.append("Alimentação gratuita fornecida - sem diária")
-            
-    elif tipo_deslocamento == "Mais de 12 horas com pernoite (completa)":
-        if not alimentacao_gratuita:
-            diaria_alimentacao = valor_alimentacao
-        if not hospedagem_gratuita:
-            diaria_hospedagem = valor_pousada
+            diaria_retorno = valor_alimentacao
+        
+        total_viagem += diaria_retorno
+        
+        # Para exibição
+        diaria_alimentacao = valor_alimentacao if not alimentacao_gratuita else 0
+        diaria_hospedagem = valor_pousada if not hospedagem_gratuita else 0
         percentual_aplicado = 100
-        observacoes.append("100% do valor total (viagem com pernoite)")
+        
+        if dias_com_pernoite > 0 and diaria_retorno > 0:
+            observacoes.append(f"Viagem com pernoite: {dias_com_pernoite} dia(s) completo(s) + 1 dia retorno (só alimentação)")
+        elif dias_com_pernoite > 0:
+            observacoes.append(f"Viagem com pernoite: {dias_com_pernoite} dia(s) completo(s)")
+        elif diaria_retorno > 0:
+            observacoes.append("Dia de retorno: apenas alimentação")
+        else:
+            observacoes.append("Viagem com pernoite - alimentação/hospedagem gratuitas")
+        
+        return {
+            "diaria_alimentacao": diaria_alimentacao,
+            "diaria_hospedagem": diaria_hospedagem,
+            "diaria_total": diaria_alimentacao + diaria_hospedagem,
+            "total_viagem": total_viagem,
+            "percentual": percentual_aplicado,
+            "observacoes": observacoes,
+            "num_dias": num_dias,
+            "dias_pernoite": dias_com_pernoite,
+            "dia_retorno": dia_retorno,
+            "valor_dia_pernoite": diaria_alimentacao + diaria_hospedagem if dias_com_pernoite > 0 else 0,
+            "valor_dia_retorno": diaria_retorno
+        }
     
-    # Calcular totais
-    diaria_diaria = diaria_alimentacao + diaria_hospedagem
-    total_viagem = diaria_diaria * num_dias
-    
-    return {
-        "diaria_alimentacao": diaria_alimentacao,
-        "diaria_hospedagem": diaria_hospedagem,
-        "diaria_total": diaria_diaria,
-        "total_viagem": total_viagem,
-        "percentual": percentual_aplicado,
-        "observacoes": observacoes,
-        "num_dias": num_dias
-    }
+    else:
+        # Viagem no mesmo dia - lógica original
+        if tipo_deslocamento == "Até 6 horas (sem diária)":
+            diaria_alimentacao = 0
+            diaria_hospedagem = 0
+            percentual_aplicado = 0
+            observacoes.append("Deslocamento inferior a 6 horas não gera direito à diária")
+            
+        elif tipo_deslocamento == "6 a 8 horas consecutivas (sem pernoite)":
+            if not alimentacao_gratuita:
+                diaria_alimentacao = valor_alimentacao * 0.5  # 50% do valor
+                percentual_aplicado = 50
+                observacoes.append("50% do valor de alimentação (6-8h sem pernoite)")
+            else:
+                observacoes.append("Alimentação gratuita fornecida - sem diária")
+                
+        elif tipo_deslocamento == "Mais de 8 horas consecutivas (sem pernoite)":
+            if not alimentacao_gratuita:
+                diaria_alimentacao = valor_alimentacao  # 100% do valor
+                percentual_aplicado = 100
+                observacoes.append("100% do valor de alimentação (>8h sem pernoite)")
+            else:
+                observacoes.append("Alimentação gratuita fornecida - sem diária")
+        
+        # Calcular totais
+        diaria_diaria = diaria_alimentacao + diaria_hospedagem
+        total_viagem = diaria_diaria * num_dias
+        
+        return {
+            "diaria_alimentacao": diaria_alimentacao,
+            "diaria_hospedagem": diaria_hospedagem,
+            "diaria_total": diaria_diaria,
+            "total_viagem": total_viagem,
+            "percentual": percentual_aplicado,
+            "observacoes": observacoes,
+            "num_dias": num_dias
+        }
 
 # Calcular resultado
-resultado = calcular_diaria(destino, tipo_deslocamento, num_dias, alimentacao_gratuita, hospedagem_gratuita)
+resultado = calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno, alimentacao_gratuita, hospedagem_gratuita)
 
 # Layout principal com colunas
 col1, col2 = st.columns([2, 1])
@@ -214,25 +263,28 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("📊 Resultado do Cálculo")
     
-    # Mostrar valores base
-    st.info(f"**Valores base para {destino}:**\n"
-            f"• Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])}\n"
-            f"• Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])}\n"
-            f"• Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
-    
     # Resultado do cálculo
-    if resultado["diaria_total"] > 0:
-        st.success(f"**💰 Valor da diária calculada: {format_currency(resultado['diaria_total'])}**")
+    if resultado["total_viagem"] > 0:
+        st.success(f"**💰 Valor total da viagem: {format_currency(resultado['total_viagem'])}**")
         
-        # Detalhamento
-        if resultado["diaria_alimentacao"] > 0:
-            st.write(f"• Alimentação: {format_currency(resultado['diaria_alimentacao'])}")
-        if resultado["diaria_hospedagem"] > 0:
-            st.write(f"• Hospedagem: {format_currency(resultado['diaria_hospedagem'])}")
-        
-        if resultado["num_dias"] > 1:
-            st.write(f"**🗓️ Total para {resultado['num_dias']} dias: {format_currency(resultado['total_viagem'])}**")
+        # Detalhamento para viagem com pernoite
+        if 'dias_pernoite' in resultado and resultado['dias_pernoite'] > 0:
+            st.write("**📋 Detalhamento:**")
+            if resultado['valor_dia_pernoite'] > 0:
+                st.write(f"• {resultado['dias_pernoite']} dia(s) com pernoite: {format_currency(resultado['valor_dia_pernoite'])} x {resultado['dias_pernoite']} = {format_currency(resultado['valor_dia_pernoite'] * resultado['dias_pernoite'])}")
+            if 'valor_dia_retorno' in resultado and resultado['valor_dia_retorno'] > 0:
+                st.write(f"• 1 dia de retorno (só alimentação): {format_currency(resultado['valor_dia_retorno'])}")
+                
+        # Detalhamento para viagem no mesmo dia
+        else:
+            if resultado["diaria_alimentacao"] > 0:
+                st.write(f"• Alimentação: {format_currency(resultado['diaria_alimentacao'])}")
+            if resultado["diaria_hospedagem"] > 0:
+                st.write(f"• Hospedagem: {format_currency(resultado['diaria_hospedagem'])}")
             
+            if resultado["num_dias"] > 1:
+                st.write(f"**🗓️ Total para {resultado['num_dias']} dias: {format_currency(resultado['total_viagem'])}**")
+                
         if resultado["percentual"] > 0:
             st.write(f"📈 Percentual aplicado: {resultado['percentual']}%")
             
@@ -275,10 +327,16 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - **50%** do valor de alimentação: 6-8h consecutivas (sem pernoite)
     - **100%** do valor de alimentação: >8h consecutivas (sem pernoite)
     - **100%** do valor total: viagem com pernoite (hospedagem + alimentação)
+    
+    **Observação importante:** No dia de retorno não há pernoite, sendo calculada apenas a diária de alimentação.
     """)
 
+# Valores de referência
+st.subheader("💰 Valores de Referência")
+st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
+
 # Tabela de referência
-st.subheader("📊 Tabela de Valores de Referência")
+st.subheader("📊 Tabela Completa de Valores")
 df_valores = pd.DataFrame(VALORES_DIARIAS).T
 # Aplicar formatação de moeda
 for col in df_valores.columns:

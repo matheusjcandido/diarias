@@ -189,11 +189,18 @@ def calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno
         
         # Calcular diárias para dias com pernoite (ida + dias intermediários)
         if dias_com_pernoite > 0:
-            diaria_completa_por_dia = 0
-            if not alimentacao_gratuita:
-                diaria_completa_por_dia += valor_alimentacao
-            if not hospedagem_gratuita:
-                diaria_completa_por_dia += valor_pousada
+            # Para dias com pernoite, usar o valor total da tabela se não há gratuidades
+            # ou calcular parcialmente se há gratuidades
+            if not alimentacao_gratuita and not hospedagem_gratuita:
+                # Usar valor total da tabela
+                diaria_completa_por_dia = valor_total_dia
+            else:
+                # Calcular parcialmente se há gratuidades
+                diaria_completa_por_dia = 0
+                if not alimentacao_gratuita:
+                    diaria_completa_por_dia += valor_alimentacao
+                if not hospedagem_gratuita:
+                    diaria_completa_por_dia += valor_pousada
             
             total_dias_pernoite = diaria_completa_por_dia * dias_com_pernoite
             total_viagem += total_dias_pernoite
@@ -205,7 +212,18 @@ def calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno
         
         total_viagem += diaria_retorno
         
-        # Para exibição
+        # Para exibição (usar valores da tabela quando possível)
+        if not alimentacao_gratuita and not hospedagem_gratuita:
+            # Usar valor total da tabela para exibição
+            valor_dia_completo = valor_total_dia
+        else:
+            # Calcular parcialmente para exibição
+            valor_dia_completo = 0
+            if not alimentacao_gratuita:
+                valor_dia_completo += valor_alimentacao
+            if not hospedagem_gratuita:
+                valor_dia_completo += valor_pousada
+        
         diaria_alimentacao = valor_alimentacao if not alimentacao_gratuita else 0
         diaria_hospedagem = valor_pousada if not hospedagem_gratuita else 0
         percentual_aplicado = 100
@@ -222,14 +240,14 @@ def calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno
         return {
             "diaria_alimentacao": diaria_alimentacao,
             "diaria_hospedagem": diaria_hospedagem,
-            "diaria_total": diaria_alimentacao + diaria_hospedagem,
+            "diaria_total": valor_dia_completo,
             "total_viagem": total_viagem,
             "percentual": percentual_aplicado,
             "observacoes": observacoes,
             "num_dias": num_dias,
             "dias_pernoite": dias_com_pernoite,
             "dia_retorno": dia_retorno,
-            "valor_dia_pernoite": diaria_alimentacao + diaria_hospedagem if dias_com_pernoite > 0 else 0,
+            "valor_dia_pernoite": valor_dia_completo if dias_com_pernoite > 0 else 0,
             "valor_dia_retorno": diaria_retorno
         }
     

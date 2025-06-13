@@ -28,6 +28,25 @@ except:
             # Se não conseguir, usar formato manual
             pass
 
+# Função para formatar duração em dias + horas
+def formatar_duracao(total_horas):
+    """Converte horas totais para formato 'x dias + y horas'"""
+    dias_completos = int(total_horas // 24)
+    horas_restantes = total_horas % 24
+    
+    if dias_completos == 0:
+        return f"{horas_restantes:.1f} horas"
+    elif horas_restantes == 0:
+        if dias_completos == 1:
+            return "1 dia"
+        else:
+            return f"{dias_completos} dias"
+    else:
+        if dias_completos == 1:
+            return f"1 dia + {horas_restantes:.1f} horas"
+        else:
+            return f"{dias_completos} dias + {horas_restantes:.1f} horas"
+
 # Função para formatar moeda
 def format_currency(value):
     """Formata valor para moeda brasileira: R$ 1.234,56"""
@@ -263,7 +282,7 @@ data_retorno = st.sidebar.date_input(
 )
 
 # Horário de retorno (sempre mostrar)
-st.sidebar.subheader("🔙 Horário de Chegada no Retorno")
+st.sidebar.subheader("🔙 Horário de Retorno")
 col_hora_ret, col_min_ret = st.sidebar.columns(2)
 with col_hora_ret:
     hora_retorno = st.selectbox(
@@ -305,7 +324,7 @@ total_horas = (datetime_retorno - datetime_saida).total_seconds() / 3600
 num_dias = (data_retorno - data_ida).days + 1
 
 # Mostrar informações calculadas
-st.sidebar.success(f"⏱️ Duração total: {total_horas:.1f} horas")
+st.sidebar.success(f"⏱️ Duração total: {formatar_duracao(total_horas)}")
 if num_dias > 1:
     st.sidebar.info(f"📅 Período: {num_dias} dia(s)")
 
@@ -331,7 +350,7 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
     # Determinar tipo de viagem baseado nas horas
     if total_horas <= 6:
         # Até 6 horas - sem diária
-        observacoes.append(f"Deslocamento de {total_horas:.1f}h - inferior a 6 horas, sem direito à diária")
+        observacoes.append(f"Deslocamento de {formatar_duracao(total_horas)} - inferior a 6 horas, sem direito à diária")
         return {
             "total_viagem": 0,
             "observacoes": observacoes,
@@ -345,7 +364,7 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
             diaria = valor_alimentacao * 0.5
             total_viagem = diaria
             detalhamento.append(f"• Alimentação (50%): {diaria:.2f}")
-            observacoes.append(f"Deslocamento de {total_horas:.1f}h - 50% da diária de alimentação")
+            observacoes.append(f"Deslocamento de {formatar_duracao(total_horas)} - 50% da diária de alimentação")
         else:
             observacoes.append("Alimentação gratuita fornecida - sem diária")
             detalhamento.append("• Alimentação gratuita fornecida")
@@ -363,7 +382,7 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
             diaria = valor_alimentacao
             total_viagem = diaria
             detalhamento.append(f"• Alimentação (100%): {diaria:.2f}")
-            observacoes.append(f"Deslocamento de {total_horas:.1f}h no mesmo dia - 100% da diária de alimentação")
+            observacoes.append(f"Deslocamento de {formatar_duracao(total_horas)} no mesmo dia - 100% da diária de alimentação")
         else:
             observacoes.append("Alimentação gratuita fornecida - sem diária")
             detalhamento.append("• Alimentação gratuita fornecida")
@@ -377,7 +396,7 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
     
     else:
         # Viagem com pernoite - lógica especial baseada no marco temporal
-        observacoes.append(f"Viagem com pernoite - {total_horas:.1f}h totais em {num_dias} dia(s)")
+        observacoes.append(f"Viagem com pernoite - {formatar_duracao(total_horas)} totais em {num_dias} dia(s)")
         
         # Calcular diárias por período de 24h a partir do horário de saída
         data_atual = datetime_saida.date()
@@ -410,14 +429,14 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
                 diaria_ultimo = valor_alimentacao
                 total_viagem += diaria_ultimo
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({horas_ultimo_dia:.1f}h - só alimentação): {diaria_ultimo:.2f}")
+                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - só alimentação): {diaria_ultimo:.2f}")
             else:
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({horas_ultimo_dia:.1f}h - alimentação gratuita): 0.00")
+                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - alimentação gratuita): 0.00")
         else:
             # Menos de 6h no último dia - sem diária
             data_str = data_atual.strftime('%d/%m/%Y')
-            detalhamento.append(f"• {data_str} ({horas_ultimo_dia:.1f}h - menos de 6h): 0.00")
+            detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - menos de 6h): 0.00")
         
         return {
             "total_viagem": total_viagem,
@@ -471,7 +490,7 @@ with col2:
     st.markdown("**📅 Período da Viagem**")
     st.write(f"**Saída:** {data_ida.strftime('%d/%m/%Y')} às {hora_saida:02d}:{minuto_saida:02d}")
     st.write(f"**Retorno:** {data_retorno.strftime('%d/%m/%Y')} às {hora_retorno:02d}:{minuto_retorno:02d}")
-    st.write(f"**Duração:** {total_horas:.1f} horas ({num_dias} dia(s))")
+    st.write(f"**Duração:** {formatar_duracao(total_horas)} ({num_dias} dia(s))")
     
     if "tipo_calculado" in resultado:
         st.markdown("**⏰ Tipo de Cálculo**")
@@ -501,6 +520,10 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
     - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária adicional)
     """)
+
+# Valores de referência
+st.subheader("💰 Valores de Referência")
+st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
 
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")

@@ -10,15 +10,22 @@ st.set_page_config(
     layout="wide"
 )
 
+# Configurar formatação brasileira
+import os
+os.environ['LC_ALL'] = 'pt_BR.UTF-8'
+
 # Tentar configurar locale para português brasileiro
 try:
     locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 except:
     try:
-        locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+        locale.setlocale(locale.LC_ALL, 'pt_BR')
     except:
-        # Se não conseguir, usar formato manual
-        pass
+        try:
+            locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+        except:
+            # Se não conseguir, usar formato manual
+            pass
 
 # Função para formatar moeda
 def format_currency(value):
@@ -69,11 +76,33 @@ destino = st.sidebar.selectbox(
 
 # Datas da viagem
 st.sidebar.subheader("📅 Período da Viagem")
+st.sidebar.caption("💡 Use o formato dd/mm/aaaa (ex: 14/06/2025)")
+
+# CSS personalizado para melhorar a formatação
+st.markdown("""
+<style>
+    /* Customização para inputs de data */
+    .stDateInput > div > div > input {
+        text-align: center;
+    }
+    
+    /* Tooltip para formato de data */
+    .date-help {
+        font-size: 0.8em;
+        color: #666;
+        font-style: italic;
+        margin-top: -10px;
+        margin-bottom: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 data_ida = st.sidebar.date_input(
     "Data de ida:",
     value=datetime.now().date(),
     min_value=datetime.now().date() - timedelta(days=365),
-    max_value=datetime.now().date() + timedelta(days=365)
+    max_value=datetime.now().date() + timedelta(days=365),
+    format="DD/MM/YYYY"
 )
 
 # Definir valor padrão para retorno (sempre >= data de ida)
@@ -83,7 +112,8 @@ data_retorno = st.sidebar.date_input(
     "Data de retorno:",
     value=valor_padrao_retorno,
     min_value=data_ida,
-    max_value=datetime.now().date() + timedelta(days=365)
+    max_value=datetime.now().date() + timedelta(days=365),
+    format="DD/MM/YYYY"
 )
 
 # Validação de datas

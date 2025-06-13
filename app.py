@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import locale
 
 # Configuração da página
 st.set_page_config(
@@ -8,6 +9,20 @@ st.set_page_config(
     page_icon="💰",
     layout="wide"
 )
+
+# Tentar configurar locale para português brasileiro
+try:
+    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+    except:
+        # Se não conseguir, usar formato manual
+        pass
+
+# Função para formatar moeda
+def format_currency(value):
+    return f"R$ {value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
 
 # Título principal
 st.title("💰 Calculadora de Diárias de Viagem")
@@ -167,22 +182,22 @@ with col1:
     
     # Mostrar valores base
     st.info(f"**Valores base para {destino}:**\n"
-            f"• Alimentação: R$ {VALORES_DIARIAS[destino]['alimentacao']:.2f}\n"
-            f"• Hospedagem: R$ {VALORES_DIARIAS[destino]['pousada']:.2f}\n"
-            f"• Total diário: R$ {VALORES_DIARIAS[destino]['total']:.2f}")
+            f"• Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])}\n"
+            f"• Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])}\n"
+            f"• Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
     
     # Resultado do cálculo
     if resultado["diaria_total"] > 0:
-        st.success(f"**💰 Valor da diária calculada: R$ {resultado['diaria_total']:.2f}**")
+        st.success(f"**💰 Valor da diária calculada: {format_currency(resultado['diaria_total'])}**")
         
         # Detalhamento
         if resultado["diaria_alimentacao"] > 0:
-            st.write(f"• Alimentação: R$ {resultado['diaria_alimentacao']:.2f}")
+            st.write(f"• Alimentação: {format_currency(resultado['diaria_alimentacao'])}")
         if resultado["diaria_hospedagem"] > 0:
-            st.write(f"• Hospedagem: R$ {resultado['diaria_hospedagem']:.2f}")
+            st.write(f"• Hospedagem: {format_currency(resultado['diaria_hospedagem'])}")
         
         if resultado["num_dias"] > 1:
-            st.write(f"**🗓️ Total para {resultado['num_dias']} dias: R$ {resultado['total_viagem']:.2f}**")
+            st.write(f"**🗓️ Total para {resultado['num_dias']} dias: {format_currency(resultado['total_viagem'])}**")
             
         if resultado["percentual"] > 0:
             st.write(f"📈 Percentual aplicado: {resultado['percentual']}%")
@@ -200,23 +215,19 @@ with col2:
     st.subheader("📋 Resumo da Viagem")
     
     # Card com resumo
-    st.markdown(f"""
-    <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; margin: 10px 0;">
-        <h4>🎯 Destino</h4>
-        <p>{destino}</p>
-        
-        <h4>📅 Período da Viagem</h4>
-        <p><strong>Ida:</strong> {data_ida.strftime('%d/%m/%Y')}</p>
-        <p><strong>Retorno:</strong> {data_retorno.strftime('%d/%m/%Y')}</p>
-        <p><strong>Duração:</strong> {num_dias} dia(s)</p>
-        
-        <h4>⏰ Tipo de Deslocamento</h4>
-        <p>{tipo_deslocamento}</p>
-        
-        <h4>💰 Valor Total</h4>
-        <h3 style="color: #1f77b4;">R$ {resultado['total_viagem']:.2f}</h3>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("**🎯 Destino**")
+    st.write(f"{destino}")
+    
+    st.markdown("**📅 Período da Viagem**")
+    st.write(f"**Ida:** {data_ida.strftime('%d/%m/%Y')}")
+    st.write(f"**Retorno:** {data_retorno.strftime('%d/%m/%Y')}")
+    st.write(f"**Duração:** {num_dias} dia(s)")
+    
+    st.markdown("**⏰ Tipo de Deslocamento**")
+    st.write(f"{tipo_deslocamento}")
+    
+    st.markdown("**💰 Valor Total**")
+    st.markdown(f"### {format_currency(resultado['total_viagem'])}")
 
 # Seção de informações legais
 st.subheader("⚖️ Base Legal")
@@ -235,7 +246,10 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
 # Tabela de referência
 st.subheader("📊 Tabela de Valores de Referência")
 df_valores = pd.DataFrame(VALORES_DIARIAS).T
-df_valores.columns = ['Alimentação (R$)', 'Hospedagem (R$)', 'Total (R$)']
+# Aplicar formatação de moeda
+for col in df_valores.columns:
+    df_valores[col] = df_valores[col].apply(format_currency)
+df_valores.columns = ['Alimentação', 'Hospedagem', 'Total']
 df_valores.index.name = 'Destino'
 st.dataframe(df_valores, use_container_width=True)
 

@@ -7,7 +7,8 @@ import locale
 st.set_page_config(
     page_title="Calculadora de Diárias",
     page_icon="💰",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"  # Sidebar expandida por padrão
 )
 
 # Configurar formatação brasileira
@@ -111,7 +112,65 @@ st.markdown("""
         margin-top: -10px;
         margin-bottom: 10px;
     }
+    
+    /* Forçar sidebar aberta - Classes mais recentes do Streamlit */
+    .st-emotion-cache-1cypcdb,
+    .st-emotion-cache-10trblm,
+    .css-1d391kg {
+        width: 21rem !important;
+        min-width: 21rem !important;
+    }
+    
+    /* Para dispositivos móveis - manter sidebar visível */
+    @media (max-width: 768px) {
+        .st-emotion-cache-1cypcdb,
+        .st-emotion-cache-10trblm,
+        .css-1d391kg {
+            width: 18rem !important;
+            min-width: 18rem !important;
+            max-width: 18rem !important;
+            transform: translateX(0px) !important;
+            position: relative !important;
+        }
+        
+        /* Esconder botão de toggle em mobile */
+        .st-emotion-cache-14xtw13,
+        .css-14xtw13 {
+            display: none !important;
+        }
+        
+        /* Ajustar container principal */
+        .block-container,
+        .st-emotion-cache-1y4p8pa {
+            padding-left: 19rem !important;
+            max-width: calc(100% - 19rem) !important;
+        }
+    }
+    
+    /* Desktop - garantir sidebar sempre visível */
+    @media (min-width: 769px) {
+        .st-emotion-cache-1cypcdb,
+        .css-1cypcdb {
+            transform: translateX(0px) !important;
+            position: relative !important;
+        }
+    }
 </style>
+
+<script>
+// JavaScript para expandir sidebar automaticamente
+window.addEventListener('load', function() {
+    // Tentar expandir sidebar após carregar
+    setTimeout(function() {
+        const sidebarButtons = document.querySelectorAll('[data-testid="baseButton-header"]');
+        sidebarButtons.forEach(button => {
+            if (button.getAttribute('aria-expanded') === 'false') {
+                button.click();
+            }
+        });
+    }, 1000);
+});
+</script>
 """, unsafe_allow_html=True)
 
 data_ida = st.sidebar.date_input(

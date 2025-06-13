@@ -367,10 +367,6 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     **Observação importante:** No dia de retorno não há pernoite, sendo calculada apenas a diária de alimentação.
     """)
 
-# Valores de referência
-st.subheader("💰 Valores de Referência")
-st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
-
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")
 df_valores = pd.DataFrame(VALORES_DIARIAS).T

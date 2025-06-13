@@ -34,8 +34,14 @@ def formatar_duracao(total_horas):
     dias_completos = int(total_horas // 24)
     horas_restantes = total_horas % 24
     
+    # Formatar horas sem casa decimal se for número inteiro
+    if horas_restantes == int(horas_restantes):
+        horas_str = f"{int(horas_restantes)} horas" if horas_restantes != 1 else "1 hora"
+    else:
+        horas_str = f"{horas_restantes:.1f} horas"
+    
     if dias_completos == 0:
-        return f"{horas_restantes:.1f} horas"
+        return horas_str
     elif horas_restantes == 0:
         if dias_completos == 1:
             return "1 dia"
@@ -43,9 +49,9 @@ def formatar_duracao(total_horas):
             return f"{dias_completos} dias"
     else:
         if dias_completos == 1:
-            return f"1 dia + {horas_restantes:.1f} horas"
+            return f"1 dia + {horas_str}"
         else:
-            return f"{dias_completos} dias + {horas_restantes:.1f} horas"
+            return f"{dias_completos} dias + {horas_str}"
 
 # Função para formatar moeda
 def format_currency(value):
@@ -325,8 +331,6 @@ num_dias = (data_retorno - data_ida).days + 1
 
 # Mostrar informações calculadas
 st.sidebar.success(f"⏱️ Duração total: {formatar_duracao(total_horas)}")
-if num_dias > 1:
-    st.sidebar.info(f"📅 Período: {num_dias} dia(s)")
 
 # Alimentação e hospedagem gratuitas
 col1, col2 = st.sidebar.columns(2)
@@ -426,27 +430,33 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
         if horas_ultimo_dia <= 6:
             # Menos de 6h no último dia - sem diária
             data_str = data_atual.strftime('%d/%m/%Y')
-            detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - menos de 6h): 0.00")
+            # Formatar horas sem casa decimal se for número inteiro
+            horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
+            detalhamento.append(f"• {data_str} ({horas_formatadas} - menos de 6h): 0.00")
         elif horas_ultimo_dia <= 8:
             # 6 a 8h no último dia - 50% da diária de alimentação
             if not alimentacao_gratuita:
                 diaria_ultimo = valor_alimentacao * 0.5
                 total_viagem += diaria_ultimo
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - 50% alimentação): {diaria_ultimo:.2f}")
+                horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
+                detalhamento.append(f"• {data_str} ({horas_formatadas} - 50% alimentação): {diaria_ultimo:.2f}")
             else:
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - alimentação gratuita): 0.00")
+                horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
+                detalhamento.append(f"• {data_str} ({horas_formatadas} - alimentação gratuita): 0.00")
         else:
             # Mais de 8h no último dia - 100% da diária de alimentação
             if not alimentacao_gratuita:
                 diaria_ultimo = valor_alimentacao
                 total_viagem += diaria_ultimo
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - 100% alimentação): {diaria_ultimo:.2f}")
+                horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
+                detalhamento.append(f"• {data_str} ({horas_formatadas} - 100% alimentação): {diaria_ultimo:.2f}")
             else:
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - alimentação gratuita): 0.00")
+                horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
+                detalhamento.append(f"• {data_str} ({horas_formatadas} - alimentação gratuita): 0.00")
         
         return {
             "total_viagem": total_viagem,
@@ -486,10 +496,6 @@ with col1:
         st.subheader("📝 Observações")
         for obs in resultado["observacoes"]:
             st.write(f"• {obs}")
-    
-    # Mostrar tipo de cálculo aplicado
-    if "tipo_calculado" in resultado:
-        st.info(f"**🔍 Tipo de cálculo aplicado:** {resultado['tipo_calculado']}")
 
 with col2:
     st.subheader("📋 Resumo da Viagem")
@@ -500,11 +506,7 @@ with col2:
     st.markdown("**📅 Período da Viagem**")
     st.write(f"**Saída:** {data_ida.strftime('%d/%m/%Y')} às {hora_saida:02d}:{minuto_saida:02d}")
     st.write(f"**Retorno:** {data_retorno.strftime('%d/%m/%Y')} às {hora_retorno:02d}:{minuto_retorno:02d}")
-    st.write(f"**Duração:** {formatar_duracao(total_horas)} ({num_dias} dia(s))")
-    
-    if "tipo_calculado" in resultado:
-        st.markdown("**⏰ Tipo de Cálculo**")
-        st.write(f"{resultado['tipo_calculado']}")
+    st.write(f"**Duração:** {formatar_duracao(total_horas)}")
     
     st.markdown("**💰 Valor Total**")
     st.markdown(f"### {format_currency(resultado['total_viagem'])}")
@@ -513,35 +515,20 @@ with col2:
 st.subheader("⚖️ Base Legal")
 with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     st.markdown("""
-    **Artigo 10:** As diárias serão concedidas por dia de afastamento da sede, em valor equivalente a:
-    - 70% para hospedagem
-    - 30% para alimentação
-    
-    **Artigo 11:** Os valores são concedidos conforme a duração do deslocamento **a partir do marco temporal (horário de saída)**:
-    - **0%**: Até 6 horas totais
-    - **50%** do valor de alimentação: 6 a 8 horas totais
-    - **100%** do valor de alimentação: Mais de 8 horas no mesmo dia
-    - **100%** do valor total: Para cada período completo de 24h (viagem com pernoite)
-    - **Último dia**: Calculado conforme horas restantes a partir do marco temporal:
-      - ≤ 6h: Sem diária
-      - 6-8h: 50% da diária de alimentação
-      - > 8h: 100% da diária de alimentação
-    
-    **Marco Temporal:** O horário de saída no primeiro dia é a referência para todo o cálculo.
-    
-    **Exemplos:**
-    - Saída às 8h do dia 13/06, retorno às 9h do dia 14/06:
-      - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
-      - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária)
-    
-    - Saída às 8h do dia 13/06, retorno às 15h do dia 14/06:
-      - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
-      - Das 8h às 15h do dia 14: 7h (6-8h, 50% alimentação)
-    """)
+    **Art. 10.** As diárias serão concedidas por dia de afastamento da sede, em valor equivalente a 70% (setenta por cento) a título de hospedagem e 30% (trinta por cento) a título de alimentação, para fins de indenização do beneficiário das despesas decorrentes, dispensada a comprovação das despesas.
 
-# Valores de referência
-st.subheader("💰 Valores de Referência")
-st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
+    **Art. 11.** Os valores indenizatórios, para atender às despesas com alimentação e hospedagem, serão concedidos em razão da duração do deslocamento, com base nos valores estabelecidos nos Anexos I e II deste Decreto, observados os seguintes percentuais:
+
+    **I** - 50% (cinquenta por cento) do valor limite diário para as despesas com alimentação, quando o deslocamento da respectiva sede for superior a 6h e inferior a 8h consecutivas, desde que a estrutura organizacional do Estado não forneça alimentação gratuita;
+
+    **II** - 100% (cem por cento) do valor limite diário para as despesas com alimentação, quando o deslocamento da respectiva sede for superior a 8h consecutivas, desde que não haja pernoite e que a estrutura organizacional do Estado não forneça alimentação gratuita;
+
+    **III** - 100% (cem por cento) do valor limite diário, para as despesas com hospedagem, quando o deslocamento da respectiva sede exigir pernoite em alojamento não gratuito, sem despesas com alimentação;
+
+    **IV** - 100% (cem por cento) do valor limite diário, para as despesas com hospedagem e alimentação, quando o deslocamento da respectiva sede for superior a 12h consecutivas desde que haja pernoite e alimentação não gratuita; ou
+
+    **V** - 80% (oitenta por cento) do valor limite diário, ao beneficiário exercendo função de tripulante de aeronave, para despesas com uso de dia de hospedagem e alimentação, quando houver interrupção da jornada de trabalho fora da base de origem, quando o período for superior a 6h e inferior a 10h consecutivas, nos termos da Lei Federal nº 13.475, de 28 de agosto de 2017, desde que não se enquadre nos incisos I a IV deste artigo.
+    """)
 
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")

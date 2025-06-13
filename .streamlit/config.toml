@@ -15,3 +15,11 @@ enableXsrfProtection = false
 [browser]
 # Configurações do navegador
 gatherUsageStats = false
+
+[global]
+# Configurações globais
+dataFrameSerialization = "legacy"
+
+[ui]
+# Configurações da interface
+hideSidebarNav = false

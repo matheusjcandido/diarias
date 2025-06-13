@@ -419,24 +419,34 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
             
             data_atual += timedelta(days=1)
         
-        # Último dia - calcular horas restantes
+        # Último dia - calcular horas restantes e aplicar regras do marco temporal
         inicio_ultimo_dia = datetime.combine(data_atual, horario_marco)
         horas_ultimo_dia = (datetime_retorno - inicio_ultimo_dia).total_seconds() / 3600
         
-        if horas_ultimo_dia > 6:
-            # Mais de 6h no último dia - diária de alimentação
+        if horas_ultimo_dia <= 6:
+            # Menos de 6h no último dia - sem diária
+            data_str = data_atual.strftime('%d/%m/%Y')
+            detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - menos de 6h): 0.00")
+        elif horas_ultimo_dia <= 8:
+            # 6 a 8h no último dia - 50% da diária de alimentação
             if not alimentacao_gratuita:
-                diaria_ultimo = valor_alimentacao
+                diaria_ultimo = valor_alimentacao * 0.5
                 total_viagem += diaria_ultimo
                 data_str = data_atual.strftime('%d/%m/%Y')
-                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - só alimentação): {diaria_ultimo:.2f}")
+                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - 50% alimentação): {diaria_ultimo:.2f}")
             else:
                 data_str = data_atual.strftime('%d/%m/%Y')
                 detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - alimentação gratuita): 0.00")
         else:
-            # Menos de 6h no último dia - sem diária
-            data_str = data_atual.strftime('%d/%m/%Y')
-            detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - menos de 6h): 0.00")
+            # Mais de 8h no último dia - 100% da diária de alimentação
+            if not alimentacao_gratuita:
+                diaria_ultimo = valor_alimentacao
+                total_viagem += diaria_ultimo
+                data_str = data_atual.strftime('%d/%m/%Y')
+                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - 100% alimentação): {diaria_ultimo:.2f}")
+            else:
+                data_str = data_atual.strftime('%d/%m/%Y')
+                detalhamento.append(f"• {data_str} ({formatar_duracao(horas_ultimo_dia)} - alimentação gratuita): 0.00")
         
         return {
             "total_viagem": total_viagem,
@@ -512,13 +522,21 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - **50%** do valor de alimentação: 6 a 8 horas totais
     - **100%** do valor de alimentação: Mais de 8 horas no mesmo dia
     - **100%** do valor total: Para cada período completo de 24h (viagem com pernoite)
-    - **Último dia**: Calculado conforme horas restantes a partir do marco temporal
+    - **Último dia**: Calculado conforme horas restantes a partir do marco temporal:
+      - ≤ 6h: Sem diária
+      - 6-8h: 50% da diária de alimentação
+      - > 8h: 100% da diária de alimentação
     
     **Marco Temporal:** O horário de saída no primeiro dia é a referência para todo o cálculo.
     
-    **Exemplo:** Saída às 8h do dia 13/06, retorno às 9h do dia 14/06
-    - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
-    - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária adicional)
+    **Exemplos:**
+    - Saída às 8h do dia 13/06, retorno às 9h do dia 14/06:
+      - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
+      - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária)
+    
+    - Saída às 8h do dia 13/06, retorno às 15h do dia 14/06:
+      - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
+      - Das 8h às 15h do dia 14: 7h (6-8h, 50% alimentação)
     """)
 
 # Valores de referência

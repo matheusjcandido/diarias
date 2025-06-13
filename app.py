@@ -124,7 +124,7 @@ st.markdown("""
     
     /* Mobile - comportamento responsivo normal */
     @media (max-width: 768px) {
-        /* Quando sidebar ABERTA - detecta pela presença da classe de sidebar visível */
+        /* Quando sidebar ABERTA */
         .st-emotion-cache-1cypcdb:not([aria-hidden="true"]),
         .css-1cypcdb:not([aria-hidden="true"]) {
             width: 18rem !important;
@@ -163,7 +163,7 @@ st.markdown("""
 </style>
 
 <script>
-// JavaScript para detectar mudanças na sidebar e ajustar layout
+// JavaScript apenas para ajustar layout - SEM interferir nos controles da sidebar
 window.addEventListener('load', function() {
     // Função para ajustar layout baseado no estado da sidebar
     function adjustLayout() {
@@ -187,23 +187,37 @@ window.addEventListener('load', function() {
         }
     }
     
-    // Observar mudanças na sidebar
-    const observer = new MutationObserver(adjustLayout);
+    // Observar APENAS mudanças de estilo na sidebar (não interferir em cliques)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            // Ajustar layout apenas quando há mudança real no estilo da sidebar
+            if (mutation.type === 'attributes' && 
+                (mutation.attributeName === 'style' || mutation.attributeName === 'aria-hidden')) {
+                setTimeout(adjustLayout, 50); // Pequeno delay para garantir aplicação
+            }
+        });
+    });
+    
     const sidebar = document.querySelector('.st-emotion-cache-1cypcdb, .css-1cypcdb');
     
     if (sidebar) {
         observer.observe(sidebar, {
             attributes: true,
-            attributeFilter: ['style', 'aria-hidden']
+            attributeFilter: ['style', 'aria-hidden'] // Apenas observar mudanças de estilo
         });
     }
     
     // Ajustar no resize da janela
     window.addEventListener('resize', adjustLayout);
     
-    // Ajuste inicial
+    // Ajuste inicial APENAS - sem interferir nos controles
     setTimeout(adjustLayout, 500);
-    setTimeout(adjustLayout, 1500); // Segundo ajuste após carregamento completo
+});
+
+// Prevenir comportamentos automáticos indesejados
+document.addEventListener('click', function(e) {
+    // NÃO interceptar cliques em campos de data ou outros controles
+    // Deixar o Streamlit gerenciar normalmente
 });
 </script>
 """, unsafe_allow_html=True)

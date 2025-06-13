@@ -289,19 +289,19 @@ with col1:
             st.write("**📋 Detalhamento:**")
             if resultado['valor_dia_pernoite'] > 0:
                 valor_total_pernoite = resultado['valor_dia_pernoite'] * resultado['dias_pernoite']
-                st.write(f"• {resultado['dias_pernoite']} dia(s) com pernoite: {format_currency(resultado['valor_dia_pernoite'])} × {resultado['dias_pernoite']} = {format_currency(valor_total_pernoite)}")
+                st.write(f"• {resultado['dias_pernoite']} dia(s) com pernoite: {resultado['valor_dia_pernoite']:.2f} × {resultado['dias_pernoite']} = {valor_total_pernoite:.2f}")
             if 'valor_dia_retorno' in resultado and resultado['valor_dia_retorno'] > 0:
-                st.write(f"• 1 dia de retorno (só alimentação): {format_currency(resultado['valor_dia_retorno'])}")
+                st.write(f"• 1 dia de retorno (só alimentação): {resultado['valor_dia_retorno']:.2f}")
                 
         # Detalhamento para viagem no mesmo dia
         else:
             if resultado["diaria_alimentacao"] > 0:
-                st.write(f"• Alimentação: {format_currency(resultado['diaria_alimentacao'])}")
+                st.write(f"• Alimentação: {resultado['diaria_alimentacao']:.2f}")
             if resultado["diaria_hospedagem"] > 0:
-                st.write(f"• Hospedagem: {format_currency(resultado['diaria_hospedagem'])}")
+                st.write(f"• Hospedagem: {resultado['diaria_hospedagem']:.2f}")
             
             if resultado["num_dias"] > 1:
-                st.write(f"**🗓️ Total para {resultado['num_dias']} dias: {format_currency(resultado['total_viagem'])}**")
+                st.write(f"**🗓️ Total para {resultado['num_dias']} dias: {resultado['total_viagem']:.2f}**")
                 
         if resultado["percentual"] > 0:
             st.write(f"📈 Percentual aplicado: {resultado['percentual']}%")

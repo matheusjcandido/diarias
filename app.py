@@ -526,10 +526,6 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária adicional)
     """)
 
-# Valores de referência
-st.subheader("💰 Valores de Referência")
-st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
-
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")
 df_valores = pd.DataFrame(VALORES_DIARIAS).T

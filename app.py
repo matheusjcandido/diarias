@@ -13,6 +13,16 @@ st.set_page_config(
 st.title("💰 Calculadora de Diárias de Viagem")
 st.caption("Baseado no Decreto nº 6.358/2024")
 
+# Informações sobre como usar
+st.info("""
+📋 **Como funciona:**
+- **Mesmo dia** (ida = retorno): Selecione a duração da viagem (6h, 8h, etc.)
+- **Dias diferentes** (ida ≠ retorno): Automaticamente aplicará diária completa com pernoite
+- **Gratuidades**: Marque se alimentação ou hospedagem são fornecidas gratuitamente
+""")
+
+st.markdown("---")
+
 # Valores da tabela conforme o decreto
 VALORES_DIARIAS = {
     "Distrito Federal": {
@@ -41,27 +51,45 @@ destino = st.sidebar.selectbox(
     ["Distrito Federal", "Capitais de Estado", "Demais Municípios"]
 )
 
-# Tipo de deslocamento
-tipo_deslocamento = st.sidebar.selectbox(
-    "Tipo de deslocamento:",
-    [
-        "Até 6 horas (sem diária)",
-        "6 a 8 horas consecutivas (sem pernoite)",
-        "Mais de 8 horas consecutivas (sem pernoite)",
-        "Com pernoite (hospedagem apenas)",
-        "Mais de 12 horas com pernoite (completa)",
-        "Tripulante aeronave 6-10h (80% do valor)"
-    ]
+# Datas da viagem
+st.sidebar.subheader("📅 Período da Viagem")
+data_ida = st.sidebar.date_input(
+    "Data de ida:",
+    value=datetime.now().date(),
+    min_value=datetime.now().date() - timedelta(days=365),
+    max_value=datetime.now().date() + timedelta(days=365)
 )
 
-# Número de dias
-num_dias = st.sidebar.number_input(
-    "Número de dias de viagem:",
-    min_value=1,
-    max_value=365,
-    value=1,
-    step=1
+data_retorno = st.sidebar.date_input(
+    "Data de retorno:",
+    value=datetime.now().date(),
+    min_value=data_ida,
+    max_value=datetime.now().date() + timedelta(days=365)
 )
+
+# Validação de datas
+if data_retorno < data_ida:
+    st.sidebar.error("❌ A data de retorno não pode ser anterior à data de ida!")
+    st.stop()
+
+# Calcular número de dias e tipo de deslocamento
+num_dias = (data_retorno - data_ida).days + 1
+tem_pernoite = data_ida != data_retorno
+
+# Tipo de deslocamento (apenas para viagens no mesmo dia)
+if tem_pernoite:
+    tipo_deslocamento = "Mais de 12 horas com pernoite (completa)"
+    st.sidebar.success("🏨 Viagem com pernoite detectada - Diária completa aplicada")
+else:
+    st.sidebar.info("📅 Viagem no mesmo dia - Selecione a duração:")
+    tipo_deslocamento = st.sidebar.selectbox(
+        "Tipo de deslocamento (mesmo dia):",
+        [
+            "Até 6 horas (sem diária)",
+            "6 a 8 horas consecutivas (sem pernoite)",
+            "Mais de 8 horas consecutivas (sem pernoite)"
+        ]
+    )
 
 # Alimentação e hospedagem gratuitas
 col1, col2 = st.sidebar.columns(2)
@@ -106,29 +134,13 @@ def calcular_diaria(destino, tipo_deslocamento, num_dias, alimentacao_gratuita, 
         else:
             observacoes.append("Alimentação gratuita fornecida - sem diária")
             
-    elif tipo_deslocamento == "Com pernoite (hospedagem apenas)":
-        if not hospedagem_gratuita:
-            diaria_hospedagem = valor_pousada  # 100% hospedagem
-            percentual_aplicado = 100
-            observacoes.append("100% do valor de hospedagem (com pernoite)")
-        else:
-            observacoes.append("Hospedagem gratuita fornecida - sem diária")
-            
     elif tipo_deslocamento == "Mais de 12 horas com pernoite (completa)":
         if not alimentacao_gratuita:
             diaria_alimentacao = valor_alimentacao
         if not hospedagem_gratuita:
             diaria_hospedagem = valor_pousada
         percentual_aplicado = 100
-        observacoes.append("100% do valor total (>12h com pernoite)")
-        
-    elif tipo_deslocamento == "Tripulante aeronave 6-10h (80% do valor)":
-        if not alimentacao_gratuita and not hospedagem_gratuita:
-            diaria_total = valor_total_dia * 0.8  # 80% do total
-            diaria_alimentacao = valor_alimentacao * 0.8
-            diaria_hospedagem = valor_pousada * 0.8
-            percentual_aplicado = 80
-            observacoes.append("80% do valor total (tripulante aeronave 6-10h)")
+        observacoes.append("100% do valor total (viagem com pernoite)")
     
     # Calcular totais
     diaria_diaria = diaria_alimentacao + diaria_hospedagem
@@ -193,11 +205,13 @@ with col2:
         <h4>🎯 Destino</h4>
         <p>{destino}</p>
         
+        <h4>📅 Período da Viagem</h4>
+        <p><strong>Ida:</strong> {data_ida.strftime('%d/%m/%Y')}</p>
+        <p><strong>Retorno:</strong> {data_retorno.strftime('%d/%m/%Y')}</p>
+        <p><strong>Duração:</strong> {num_dias} dia(s)</p>
+        
         <h4>⏰ Tipo de Deslocamento</h4>
         <p>{tipo_deslocamento}</p>
-        
-        <h4>📅 Duração</h4>
-        <p>{num_dias} dia(s)</p>
         
         <h4>💰 Valor Total</h4>
         <h3 style="color: #1f77b4;">R$ {resultado['total_viagem']:.2f}</h3>
@@ -215,9 +229,7 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     **Artigo 11:** Os valores são concedidos conforme a duração do deslocamento:
     - **50%** do valor de alimentação: 6-8h consecutivas (sem pernoite)
     - **100%** do valor de alimentação: >8h consecutivas (sem pernoite)
-    - **100%** do valor de hospedagem: com pernoite em alojamento não gratuito
-    - **100%** do valor total: >12h consecutivas com pernoite
-    - **80%** do valor total: tripulante de aeronave (6-10h consecutivas)
+    - **100%** do valor total: viagem com pernoite (hospedagem + alimentação)
     """)
 
 # Tabela de referência

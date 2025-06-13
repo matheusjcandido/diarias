@@ -76,7 +76,6 @@ destino = st.sidebar.selectbox(
 
 # Datas da viagem
 st.sidebar.subheader("📅 Período da Viagem")
-st.sidebar.caption("💡 Use o formato dd/mm/aaaa (ex: 14/06/2025)")
 
 # CSS personalizado para melhorar a formatação
 st.markdown("""
@@ -271,7 +270,8 @@ with col1:
         if 'dias_pernoite' in resultado and resultado['dias_pernoite'] > 0:
             st.write("**📋 Detalhamento:**")
             if resultado['valor_dia_pernoite'] > 0:
-                st.write(f"• {resultado['dias_pernoite']} dia(s) com pernoite: {format_currency(resultado['valor_dia_pernoite'])} x {resultado['dias_pernoite']} = {format_currency(resultado['valor_dia_pernoite'] * resultado['dias_pernoite'])}")
+                valor_total_pernoite = resultado['valor_dia_pernoite'] * resultado['dias_pernoite']
+                st.write(f"• {resultado['dias_pernoite']} dia(s) com pernoite: {format_currency(resultado['valor_dia_pernoite'])} × {resultado['dias_pernoite']} = {format_currency(valor_total_pernoite)}")
             if 'valor_dia_retorno' in resultado and resultado['valor_dia_retorno'] > 0:
                 st.write(f"• 1 dia de retorno (só alimentação): {format_currency(resultado['valor_dia_retorno'])}")
                 

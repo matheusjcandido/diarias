@@ -86,19 +86,6 @@ VALORES_DIARIAS = {
     }
 }
 
-# Sidebar para inputs
-st.sidebar.header("📋 Dados da Viagem")
-
-# Destino
-destino = st.sidebar.selectbox(
-    "Destino da viagem:",
-    ["Demais Municípios", "Distrito Federal", "Capitais de Estado"],
-    index=0  # Demais Municípios como padrão
-)
-
-# Datas da viagem
-st.sidebar.subheader("📅 Período da Viagem")
-
 # CSS personalizado para melhorar a formatação
 st.markdown("""
 <style>
@@ -225,6 +212,19 @@ document.addEventListener('click', function(e) {
 </script>
 """, unsafe_allow_html=True)
 
+# Sidebar para inputs
+st.sidebar.header("📋 Dados da Viagem")
+
+# Destino
+destino = st.sidebar.selectbox(
+    "Destino da viagem:",
+    ["Demais Municípios", "Distrito Federal", "Capitais de Estado"],
+    index=0  # Demais Municípios como padrão
+)
+
+# Datas da viagem
+st.sidebar.subheader("📅 Período da Viagem")
+
 data_ida = st.sidebar.date_input(
     "Data de ida:",
     value=datetime.now().date(),
@@ -262,46 +262,25 @@ data_retorno = st.sidebar.date_input(
     format="DD/MM/YYYY"
 )
 
-# Horário de retorno (apenas se data diferente)
-if data_ida != data_retorno:
-    st.sidebar.subheader("🔙 Horário de Retorno")
-    col_hora_ret, col_min_ret = st.sidebar.columns(2)
-    with col_hora_ret:
-        hora_retorno = st.selectbox(
-            "Hora:",
-            options=list(range(0, 24)),
-            index=17,  # 17h como padrão
-            format_func=lambda x: f"{x:02d}",
-            key="hora_retorno"
-        )
-    with col_min_ret:
-        minuto_retorno = st.selectbox(
-            "Minuto:",
-            options=[0, 15, 30, 45],
-            index=0,  # 00 como padrão
-            format_func=lambda x: f"{x:02d}",
-            key="minuto_retorno"
-        )
-else:
-    # Viagem no mesmo dia - horário de retorno
-    st.sidebar.subheader("🔙 Horário de Retorno")
-    col_hora_ret, col_min_ret = st.sidebar.columns(2)
-    with col_hora_ret:
-        hora_retorno = st.selectbox(
-            "Hora:",
-            options=list(range(0, 24)),
-            index=17,  # 17h como padrão
-            format_func=lambda x: f"{x:02d}",
-            key="hora_retorno"
-        )
-    with col_min_ret:
-        minuto_retorno = st.selectbox(
-            "Minuto:",
-            options=[0, 15, 30, 45],
-            index=0,  # 00 como padrão
-            format_func=lambda x: f"{x:02d}",
-            key="minuto_retorno"
-        )
+# Horário de retorno (sempre mostrar)
+st.sidebar.subheader("🔙 Horário de Retorno")
+col_hora_ret, col_min_ret = st.sidebar.columns(2)
+with col_hora_ret:
+    hora_retorno = st.selectbox(
+        "Hora:",
+        options=list(range(0, 24)),
+        index=17,  # 17h como padrão
+        format_func=lambda x: f"{x:02d}",
+        key="hora_retorno"
+    )
+with col_min_ret:
+    minuto_retorno = st.selectbox(
+        "Minuto:",
+        options=[0, 15, 30, 45],
+        index=0,  # 00 como padrão
+        format_func=lambda x: f"{x:02d}",
+        key="minuto_retorno"
+    )
 
 # Validação de datas e horários
 if data_retorno < data_ida:
@@ -329,9 +308,6 @@ num_dias = (data_retorno - data_ida).days + 1
 st.sidebar.success(f"⏱️ Duração total: {total_horas:.1f} horas")
 if num_dias > 1:
     st.sidebar.info(f"📅 Período: {num_dias} dia(s)")
-
-# Remover seleção manual de tipo de deslocamento
-# A lógica será automática baseada nas horas
 
 # Alimentação e hospedagem gratuitas
 col1, col2 = st.sidebar.columns(2)
@@ -451,8 +427,8 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
             "horas_ultimo_dia": horas_ultimo_dia
         }
 
-# Calcular resultado
-resultado = calcular_diaria(destino, tipo_deslocamento, num_dias, data_ida, data_retorno, alimentacao_gratuita, hospedagem_gratuita)
+# Calcular resultado usando a nova função
+resultado = calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total_horas, num_dias, alimentacao_gratuita, hospedagem_gratuita)
 
 # Layout principal com colunas
 col1, col2 = st.columns([2, 1])
@@ -489,17 +465,17 @@ with col1:
 with col2:
     st.subheader("📋 Resumo da Viagem")
     
-    # Card com resumo
     st.markdown("**🎯 Destino**")
     st.write(f"{destino}")
     
     st.markdown("**📅 Período da Viagem**")
-    st.write(f"**Ida:** {data_ida.strftime('%d/%m/%Y')}")
-    st.write(f"**Retorno:** {data_retorno.strftime('%d/%m/%Y')}")
-    st.write(f"**Duração:** {num_dias} dia(s)")
+    st.write(f"**Saída:** {data_ida.strftime('%d/%m/%Y')} às {hora_saida:02d}:{minuto_saida:02d}")
+    st.write(f"**Retorno:** {data_retorno.strftime('%d/%m/%Y')} às {hora_retorno:02d}:{minuto_retorno:02d}")
+    st.write(f"**Duração:** {total_horas:.1f} horas ({num_dias} dia(s))")
     
-    st.markdown("**⏰ Tipo de Deslocamento**")
-    st.write(f"{tipo_deslocamento}")
+    if "tipo_calculado" in resultado:
+        st.markdown("**⏰ Tipo de Cálculo**")
+        st.write(f"{resultado['tipo_calculado']}")
     
     st.markdown("**💰 Valor Total**")
     st.markdown(f"### {format_currency(resultado['total_viagem'])}")
@@ -525,6 +501,10 @@ with st.expander("Ver detalhes do Decreto nº 6.358/2024"):
     - Das 8h do dia 13 às 8h do dia 14: 24h (diária completa)
     - Das 8h às 9h do dia 14: 1h (menos de 6h, sem diária adicional)
     """)
+
+# Valores de referência
+st.subheader("💰 Valores de Referência")
+st.caption(f"Valores base para {destino}: Alimentação: {format_currency(VALORES_DIARIAS[destino]['alimentacao'])} | Hospedagem: {format_currency(VALORES_DIARIAS[destino]['pousada'])} | Total diário: {format_currency(VALORES_DIARIAS[destino]['total'])}")
 
 # Tabela de referência
 st.subheader("📊 Tabela Completa de Valores")

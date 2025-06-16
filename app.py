@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import locale
+import math
 
 # Configuração da página
 st.set_page_config(
@@ -27,6 +28,12 @@ except:
         except:
             # Se não conseguir, usar formato manual
             pass
+
+# Função para truncar valores em vez de arredondar
+def truncar_valor(valor, casas_decimais=2):
+    """Trunca um valor para o número especificado de casas decimais (sem arredondamento)"""
+    multiplicador = 10 ** casas_decimais
+    return math.floor(valor * multiplicador) / multiplicador
 
 # Função para formatar duração em dias + horas
 def formatar_duracao(total_horas):
@@ -363,9 +370,9 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
         }
     
     elif total_horas <= 8:
-        # 6 a 8 horas - 50% alimentação
+        # 6 a 8 horas - 50% alimentação (TRUNCAR em vez de arredondar)
         if not alimentacao_gratuita:
-            diaria = valor_alimentacao * 0.5
+            diaria = truncar_valor(valor_alimentacao * 0.5)
             total_viagem = diaria
             detalhamento.append(f"• Alimentação (50%): {diaria:.2f}")
             observacoes.append(f"Deslocamento de {formatar_duracao(total_horas)} - 50% da diária de alimentação")
@@ -434,9 +441,9 @@ def calcular_diaria_por_horario(destino, datetime_saida, datetime_retorno, total
             horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
             detalhamento.append(f"• {data_str} ({horas_formatadas} - menos de 6h): 0.00")
         elif horas_ultimo_dia <= 8:
-            # 6 a 8h no último dia - 50% da diária de alimentação
+            # 6 a 8h no último dia - 50% da diária de alimentação (TRUNCAR)
             if not alimentacao_gratuita:
-                diaria_ultimo = valor_alimentacao * 0.5
+                diaria_ultimo = truncar_valor(valor_alimentacao * 0.5)
                 total_viagem += diaria_ultimo
                 data_str = data_atual.strftime('%d/%m/%Y')
                 horas_formatadas = f"{int(horas_ultimo_dia)} horas" if horas_ultimo_dia == int(horas_ultimo_dia) else f"{horas_ultimo_dia:.1f} horas"
